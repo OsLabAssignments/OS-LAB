@@ -1,0 +1,347 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<ncurses.h>
+
+#define ESC 27
+int file_refresh(FILE *fp,char **buff);
+
+
+int main(int argc , char *argv[]){
+	char *file_name;
+	file_name = argv[1];
+	FILE *fp = fopen(file_name,"r+");
+	int line = 0, position = 0 , p , x , i ,j=0,temp=0,temp1=0,length=0;
+	char **buffer,eg[100] ,d,a,c;
+	
+	initscr();//initial screen
+	//raw();
+	WINDOW * win = newwin(40, 10, 0, 0);
+	wrefresh(win);
+	//keypad(stdscr, TRUE);
+	//scrollok(win,FALSE);
+	if (!fp){
+		printw("File not found!!\nProgram terminated\n");
+		exit(0);
+	}
+	buffer =  (char**)malloc (100 * sizeof(char*));
+	
+	for (x = 0; x <100; x++){
+		buffer[x]= (char*)malloc (40 * sizeof(char*)); 
+		
+	}
+	
+	
+	while(fgets(buffer[line++],40,fp)!=NULL);
+		int noOfLines=line;
+	
+	initscr();//initial screen
+	//raw();
+	line = 0 , position = 0;
+	move(0,0);
+	
+	while(1){
+		printw("\"%s\"\n",file_name);
+		/*do{
+		printw("Press Esc to enter command line\n");
+		}
+		while(getchar()==27);
+		*/
+			//printw("Press Esc to enter command line\n");
+		//clear();
+		printw("\n\n\n<j>: to move cursor down by one line\n\
+<k>: to move cursor up by one line\n\
+<h>: to move cursor left by one byte/character\n\
+<l>: to move cursor right by one byte/character\n\
+<o>: to open a new line after currentline.\n\
+<x>: to delete current byte/character from the file\n\
+<d>: to delete current line from the file\n\
+<r>: to replace current byte/character by another\n\
+<e>: to exit from the editor\n");	
+		c=getch();
+			clear();
+			
+			if( c == 'j'){//move cursor down by one line
+					if (line <= (noOfLines - 2)){
+						line++;
+						position = 0;
+						temp1 = line;
+						temp = 0;
+						length=0;
+						while((temp1-line )< 10 &&  temp1 < noOfLines){
+							if (buffer[temp1][temp]=='\n' || buffer[temp1][temp]=='\0'){
+							printw("\\n");
+							
+							length++;
+							temp1++;
+							temp=0;
+							}
+							else {
+								if (length % 40==0)
+									printw("\n");
+								printw("%c",buffer[temp1][temp++]);
+								length++;
+							}
+						}
+						printw("\n\nPosition of Cursor:\nLine = %d \nposition of character = %d",line,position);
+					}
+					else{
+						printw("Cannot move cursor further down\n");
+					}
+			}
+		
+		
+		
+		else if (c == 'k'){//move cursor up by one line
+			if (line >= 1){
+				line--;
+				position = 0;
+				temp1 = line;
+						temp = 0;
+						length=0;
+						while((temp1-line )< 10 &&  temp1 < noOfLines){
+							if (buffer[temp1][temp]=='\n' || buffer[temp1][temp]=='\0'){
+							printw("\\n");
+							
+							length++;
+							temp1++;
+							temp=0;
+							}
+							else {
+								if (length % 40==0)
+									printw("\n");
+								printw("%c",buffer[temp1][temp++]);
+								length++;
+							}
+						}
+				//move(0,0);
+				printw("\n\nPosition of Cursor:\nLine = %d \nposition of character = %d",line,position);
+			}
+			else
+				printw("Cannot move further up\n");	
+		}
+		
+		
+		
+		else if (c == 'l'){//move cursor right
+			//position++;
+			if (position < strlen(buffer[line]-1)){
+				position++;
+				temp1 = line;
+						temp = 0;
+						length=0;
+						while((temp1-line )< 10 &&  temp1 < noOfLines){
+							if (buffer[temp1][temp]=='\n' || buffer[temp1][temp]=='\0'){
+							printw("\\n");
+							
+							length++;
+							temp1++;
+							temp=0;
+							}
+							else {
+								if (length % 40==0)
+									printw("\n");
+								printw("%c",buffer[temp1][temp++]);
+								length++;
+							}
+						}
+				printw("\n\nPosition of Cursor:\nLine = %d \nposition of character = %d",line,position);
+				//move(line,++position);
+			}
+			else 
+				printw("Cannot move further right\n");
+		}
+		
+		
+		
+		else if (c == 'h'){// move cursor left
+			if (position > 0){
+				position--;
+				temp1 = line;
+						temp = 0;
+						length=0;
+						while((temp1-line )< 10 &&  temp1 < noOfLines){
+							if (buffer[temp1][temp]=='\n' || buffer[temp1][temp]=='\0'){
+							printw("\\n");
+							
+							length++;
+							temp1++;
+							temp=0;
+							}
+							else {
+								if (length % 40==0)
+									printw("\n");
+								printw("%c",buffer[temp1][temp++]);
+								length++;
+							}
+						}
+				printw("Position of Cursor:\nLine = %d \nposition of character = %d",line,position);
+				
+				//printw("Position of Cursor:Line = %d position of character = %d",line,position);
+				//move(0,position);
+			}
+			else 
+				printw("Cannot move cursor further left\n");
+		}
+		
+		
+		
+		else if (c == 'o'){//insertion on a new line
+			position = 0 ,p =++noOfLines;
+			//printf("o entered\n");
+			while (p > line+1){//shifting lines down below 'line'
+					buffer[p]=buffer[p-1];
+					p--;
+			}
+				
+			line++;
+			p = 0;
+			x = 0;
+			while ((d=getchar())!=27){
+				if (position > 38 ){//if line consists of  39 characters 
+					buffer[line][position]='\0';
+					position = 0 ,p =++noOfLines;
+					while (p > line+1){
+						buffer[p]=buffer[p-1];
+						p--;
+					}
+					line++;
+					position = 0;
+				}
+					buffer[line][position++]=d;
+					//printf("%s",buffer[1]);
+				}
+				buffer[line][position]='\0';
+				temp1 = line;
+						temp = 0;
+						length=0;
+						while((temp1-line )< 10 &&  temp1 < noOfLines){
+							if (buffer[temp1][temp]=='\n' || buffer[temp1][temp]=='\0'){
+							printw("\\n");
+							
+							length++;
+							temp1++;
+							temp=0;
+							}
+							else {
+								if (length % 40==0)
+									printw("\n");
+								printw("%c",buffer[temp1][temp++]);
+								length++;
+							}
+						}
+				printw("Position of Cursor:\nLine = %d \nposition of character = %d",line,position);
+				//printw("Position of Cursor:Line = %d position of character = %d",line,position);
+				//move(0,position);
+		}
+		
+		
+		
+			else if (c == 'x'){//delete character
+				p = position;
+				if (buffer[line][position+1]!='\0')
+				while (buffer[line][p]!='\0'){
+					buffer[line][p]=buffer[position][p+1];
+					p++;
+				}
+				else{
+					//printw("x");
+					temp1 = line;
+					while (temp1< noOfLines-1){
+					buffer[temp1]=buffer[temp1+1];
+					temp1++;
+					}
+					noOfLines--;
+				}
+				temp1 = line;
+						temp = 0;
+						length=0;
+						while((temp1-line )< 10 &&  temp1 < noOfLines){
+							if (buffer[temp1][temp]=='\n' || buffer[temp1][temp]=='\0'){
+							printw("\\n");
+							
+							length++;
+							temp1++;
+							temp=0;
+							}
+							else {
+								if (length % 40==0)
+									printw("\n");
+								printw("%c",buffer[temp1][temp++]);
+								length++;
+							}
+						}
+				printw("\n\nPosition of Cursor:\nLine = %d \nposition of character = %d",line,position);
+				}
+				//move(0,position);
+			
+		
+		
+		
+			else if (c == 'd'){//delete line
+				p = line ;
+		
+				while (p < noOfLines-1){
+					buffer[p]= buffer[p+1];
+					p++;
+				}
+				noOfLines--;
+				temp1 = line;
+						temp = 0;
+						length=0;
+						while((temp1-line )< 10 &&  temp1 < noOfLines){
+							if (buffer[temp1][temp]=='\n' || buffer[temp1][temp]=='\0'){
+							printw("\\n");
+							
+							length++;
+							temp1++;
+							temp=0;
+							}
+							else {
+								if (length % 40==0)
+									printw("\n");
+								printw("%c",buffer[temp1][temp++]);
+								length++;
+							}
+						}
+				printw("\n\nPosition of Cursor:\nLine = %d \nposition of character = %d",line,position);
+				//move(0,position);
+			}
+		
+			else if ( c == 'r'){
+				printf("enter character to be replaced with");
+				buffer[line][position]=getchar();
+				temp1 = line;
+						temp = 0;
+						length=0;
+						while((temp1-line )< 10 &&  temp1 < noOfLines){
+							if (buffer[temp1][temp]=='\n' || buffer[temp1][temp]=='\0'){
+							printw("\\n");
+							
+							length++;
+							temp1++;
+							temp=0;
+							}
+							else {
+								if (length % 40==0)
+									printw("\n");
+								printw("%c",buffer[temp1][temp++]);
+								length++;
+							}
+						}
+				printw("\n\nPosition of Cursor:\nLine = %d \nposition of character = %d",line,position);
+				//move(0,position);
+			}
+		//system ("/bin/stty cooked");	
+			else if (c=='e')
+				break;
+			
+			
+			else 
+			printw("Invalid Input\n");
+			
+		}
+	endwin();
+	return 1;
+	
+}
